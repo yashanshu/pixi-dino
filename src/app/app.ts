@@ -1,23 +1,24 @@
-import {bomberFrames, snake} from '../assets/loader';
+import {googlyFrames} from '../assets/loader';
 import * as PIXI from 'pixi.js';
 
-interface BomberFrames {
-    front: string[];
-    back: string[];
-    right: string[];
-    left:  string[];
+interface GooglyFrames {
+    nE: string;
+    sW: string;
+    nW: string;
+    o:  string;
+    sE:  string;
 }
 
 // Prepare frames
-const playerFrames: BomberFrames = bomberFrames;
+const eyes: GooglyFrames = googlyFrames;
 
-// IMPORTANT: Change this value in order to see the Hot Module Reloading!
-const currentFrame: keyof BomberFrames = 'front';
-
+const centerFrame: keyof GooglyFrames = 'o';
 
 export class GameApp {
 
     private app: PIXI.Application;
+    private leftEye: PIXI.Sprite;
+    private rightEye: PIXI.Sprite;
 
     constructor(parent: HTMLElement, width: number, height: number) {
 
@@ -28,49 +29,76 @@ export class GameApp {
         let loader = new PIXI.Loader();
 
         // Add user player assets
-        console.log('Player to load', playerFrames);
-        Object.keys(playerFrames).forEach(key => {
-            loader.add(playerFrames[key]);
+        console.log('Player to load', eyes);
+        Object.keys(eyes).forEach(key => {
+            console.log(`adding with key: ${key} to the loader ${eyes[key]}`);
+            loader.add(eyes[key]);
         });
-
-        // add snake
-        PIXI.Loader.shared
-        .add([snake])
-        .load(this.setup.bind(this))
 
         // Load assets
         loader.load(this.onAssetsLoaded.bind(this));
     }
 
     private onAssetsLoaded() {
+        this.leftEye = new PIXI.Sprite(PIXI.Texture.from(eyes[centerFrame]));
+        this.leftEye.x = 275;
+        this.leftEye.y = 450;
+        this.leftEye['vx'] = 1;
+        this.leftEye.anchor.set(0.5, 0.5);
 
-        const playerIdle: PIXI.AnimatedSprite = new PIXI.AnimatedSprite(playerFrames[currentFrame].map(path => PIXI.Texture.from(path)));
+        this.rightEye = new PIXI.Sprite(PIXI.Texture.from(eyes[centerFrame]));
+        this.rightEye.x = 675;
+        this.rightEye.y = 450;
+        this.rightEye['vx'] = 1;
+        this.rightEye.anchor.set(0.5, 0.5);
 
-        /*
-        * An AnimatedSprite inherits all the properties of a PIXI sprite
-        * so you can change its position, its anchor, mask it, etc
-        */
-        playerIdle.x = 100;
-        playerIdle.y = 150;
-        playerIdle['vx'] = 1;
-        playerIdle.anchor.set(0, 1);
-        // playerIdle.anchor.set(0.5);
-        playerIdle.animationSpeed = 0.3;
-        playerIdle.play();
-
-        this.app.stage.addChild(playerIdle);
+        this.app.stage.addChild(this.leftEye);
+        this.app.stage.addChild(this.rightEye);
+        // Start the game loop
+        this.startGameLoop();
     }
-    
-    private setup() {
-  //Create the cat sprite
-    const snakeSprite = new PIXI.Sprite(PIXI.Loader.shared.resources[snake].texture);
-        console.log('snake to load', snakeSprite);
-    snakeSprite.x = 200;
-    snakeSprite.y = 300;
-    snakeSprite['vx'] = 1;
-    snakeSprite.anchor.set(0, 1);
-    this.app.stage.addChild(snakeSprite);
-} 
+
+    private startGameLoop() {
+        this.app.ticker.add(this.update.bind(this));
+    }
+
+    private update(delta: number) {
+        // Get mouse position
+        const mousePos = this.app.renderer.plugins.interaction.mouse.global;
+
+        // Update the position of the eyes based on mouse position
+        this.updateEyePosition(this.leftEye, mousePos.x, mousePos.y);
+        this.updateEyePosition(this.rightEye, mousePos.x, mousePos.y);
+    }
+
+    private updateEyePosition(eye: PIXI.Sprite, mouseX: number, mouseY: number) {
+        // Define the max distance the "pupil" can move from the eye's center
+        const maxMoveDistance = 20; // Adjust this value to control eye movement range
+
+        // Calculate the distance and angle to the mouse
+        const dx = mouseX - eye.x;
+        const dy = mouseY - eye.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+
+        // Limit the eye movement to a circular area
+        const clampedDistance = Math.min(distance, maxMoveDistance);
+        
+        // Determine the texture based on the angle
+        if (angle < -Math.PI / 4) {
+            // Looking left
+            eye.texture = PIXI.Texture.from(eyes['nW']);
+        } else if (angle > Math.PI / 4) {
+            // Looking right
+            eye.texture = PIXI.Texture.from(eyes['nE']);
+        } else if (angle > 0) {
+            // Looking down-right
+            eye.texture = PIXI.Texture.from(eyes['sE']);
+        } else {
+            // Looking down-left
+            eye.texture = PIXI.Texture.from(eyes['sW']);
+        }
+    }
 
 }
 

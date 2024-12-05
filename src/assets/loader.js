@@ -1,14 +1,13 @@
-import snake from './images/snake.png';
-import bomberFront from './images/Bomberman/Front/*.png';
-import bomberBack from './images/Bomberman/Back/*.png';
-import bomberRight from './images/Bomberman/Right/*.png';
-import bomberLeft from './images/Bomberman/Left/*.png';
+import googlyA from './images/googly/googly-a.png';
+import googlyB from './images/googly/googly-b.png';
+import googlyC from './images/googly/googly-c.png';
+import googlyD from './images/googly/googly-d.png';
+import googlyE from './images/googly/googly-e.png';
 
-const bomberFrames = {
-    front: Object.values(bomberFront),
-    back: Object.values(bomberBack),
-    right: Object.values(bomberRight),
-    left: Object.values(bomberLeft),
+export const googlyFrames = {
+    nE: googlyA,
+    sW: googlyB,
+    nW: googlyC,
+    o: googlyD,
+    sE: googlyE,
 };
-
-export {snake, bomberFrames};
